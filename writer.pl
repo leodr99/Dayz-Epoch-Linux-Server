@@ -3,7 +3,13 @@
 # Copyright 2014 by Denis Erygin,
 # denis.erygin@gmail.com
 #
+# Slack.com integration by leodr@leodr.org
+# this patch will need the CryptSSLeasy, LWP::UserAgent and Const::Fast perl mods.
+# sidenote: --Linux R0X!--
+#
 
+use Const::Fast;    #workaround for CONSTANT interpolation
+use LWP::UserAgent; #module for http(s) get/post
 use JSON::XS;
 use DBI;
 use warnings;
@@ -23,6 +29,13 @@ use constant {
     BACKPACK  => '["DZ_Patrol_Pack_EP1",[],[]]',
     MODEL     => '"Survivor2_DZ"'
 };
+# Slack Integration
+
+const my SLACK_URL       => '';   #insert your slack.com WebHook URL here! example: https://hooks.slack.com/blablablablabla...
+const my SLACK_CHANNEL   => '#general';     #insert the (subdomain).slack.com ROOM/CHANNEL name
+const my SLACK_USERNAME  => 'ZEUS';       #insert the slack BOT "nickname"
+const my SLACK_EMOJI     => ':ghost:';      #nsert the slack BOT EMOJI Icon
+
 
 my %cid_inv = ();
 my %obj_inv = ();
@@ -1143,3 +1156,31 @@ sub h_load_trader_details {
     undef %tids;
 }
 
+# 666 - slack integration - remoteCall
+sub h_call_admin {
+    my $message = shift;
+    my ($url, $emoji, $channel, $username) = ($SLACK_URL, $SLACK_EMOJI, $SLACK_CHANNEL, $SLACK_USERNAME);
+    my $postDATA = "{ \"channel\": \"$channel\", \"username\": \"$username\", \"text\": \"$message\", \"icon_emoji\": \"$emoji\" }";
+    my $userAgent = LWP::UserAgent->new();
+    
+    $userAgent->agent("PerlZilla/v0.1 DayZEpoch1051");
+    my $req = HTTP::Request->new(POST => $url);
+    $req->content_type('application/x-www-form-urlencode');
+    $req->content($postDATA);
+    my $res = $userAgent->request($req);
+    
+    if ($res->is_success) {
+        print LOG "SLACK:WebHook PUSH sucessful: ", $res->decoded_content, " \n";
+    } else {
+        print LOG "SLACK:WebHook PUSH failed with error code: ", $res->code, "message: ", $res->message, " \n";
+
+    }
+
+    print LOG "SLACK:$sysCall";
+    system("curl $sysCall");
+    if ( $? == -1 ) {
+        print LOG "SLACK:WebHook PUSH Failed $! \n";
+    } else {
+        print LOG "SLACK:WebHook PUSH successful: %d \n", $? >> 8;
+    }
+}
