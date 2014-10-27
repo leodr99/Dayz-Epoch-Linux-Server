@@ -64,6 +64,7 @@ my %FN_IPC  = (
     396 => \&h_object_reset_damage,
     397 => \&h_object_uid_reset_damage,
     398 => \&h_trade_object,
+    666 => \&h_call_admin,
 );
 
 my $dbh   = connect_to_db();
