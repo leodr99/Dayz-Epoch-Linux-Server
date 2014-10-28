@@ -65,6 +65,7 @@ my %FN_IPC  = (
     397 => \&h_object_uid_reset_damage,
     398 => \&h_trade_object,
     666 => \&h_call_admin,
+    667 => \&h_log_admin,
 );
 
 my $dbh   = connect_to_db();
@@ -1159,7 +1160,9 @@ sub h_load_trader_details {
 
 # 666 - slack integration - remoteCall
 sub h_call_admin {
-    my $message = shift;
+    my $p = shift;
+    return unless ($p && ref($p) eq 'ARRAY');
+    my ($cmd,$message) = @$p;
     my ($url, $emoji, $channel, $username) = ($SLACK_URL, $SLACK_EMOJI, $SLACK_CHANNEL, $SLACK_USERNAME);
     my $postDATA = "{ \"channel\": \"$channel\", \"username\": \"$username\", \"text\": \"$message\", \"icon_emoji\": \"$emoji\" }";
     my $userAgent = LWP::UserAgent->new();
@@ -1171,9 +1174,23 @@ sub h_call_admin {
     my $res = $userAgent->request($req);
     
     if ($res->is_success) {
-        print LOG "SLACK:WebHook PUSH sucessful: ", $res->decoded_content, " \n";
+        print STDERR "AdminTools_SLACK:WebHook PUSH sucessful: ", $res->decoded_content, " \n";
+        print LOG "AdminTools_SLACK:WebHook PUSH sucessful: ", $res->decoded_content, " \n";
     } else {
-        print LOG "SLACK:WebHook PUSH failed with error code: ", $res->code, "message: ", $res->message, " \n";
-
+	print STDERR "AdminTools_SLACK:WebHook PUSH failed with error code: ", $res->code, "message: ", $res->message, " \n";
+        print LOG "AdminTools_SLACK:WebHook PUSH failed with error code: ", $res->code, "message: ", $res->message, " \n";
     }
+}
+
+# 667 - AdminToolsEpoch - usageLogger tool
+sub h_log_admin {
+    my $p = shift;
+    return unless ($p && ref($p) eq 'ARRAY');
+    my ($cmd, $message) = @$p;
+    unless $message {
+        print STDERR "AdminTools_usageLogger: ERROR no message defined!\n";
+        return;
+    }
+    print STDERR "AdminTools_usageLogger: $message\n";
+    print LOG "AdminTools_usageLogger: $message\n";
 }
