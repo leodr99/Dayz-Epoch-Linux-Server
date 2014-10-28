@@ -1176,12 +1176,4 @@ sub h_call_admin {
         print LOG "SLACK:WebHook PUSH failed with error code: ", $res->code, "message: ", $res->message, " \n";
 
     }
-
-    print LOG "SLACK:$sysCall";
-    system("curl $sysCall");
-    if ( $? == -1 ) {
-        print LOG "SLACK:WebHook PUSH Failed $! \n";
-    } else {
-        print LOG "SLACK:WebHook PUSH successful: %d \n", $? >> 8;
-    }
 }
