@@ -31,10 +31,10 @@ use constant {
 };
 # Slack Integration
 
-const my SLACK_URL       => '';   #insert your slack.com WebHook URL here! example: https://hooks.slack.com/blablablablabla...
-const my SLACK_CHANNEL   => '#general';     #insert the (subdomain).slack.com ROOM/CHANNEL name
-const my SLACK_USERNAME  => 'ZEUS';       #insert the slack BOT "nickname"
-const my SLACK_EMOJI     => ':ghost:';      #nsert the slack BOT EMOJI Icon
+const my $SLACK_URL       => '';   #insert your slack.com WebHook URL here! example: https://hooks.slack.com/blablablablabla...
+const my $SLACK_CHANNEL   => '#general';     #insert the (subdomain).slack.com ROOM/CHANNEL name
+const my $SLACK_USERNAME  => 'ZEUS';       #insert the slack BOT "nickname"
+const my $SLACK_EMOJI     => ':ghost:';      #nsert the slack BOT EMOJI Icon
 
 
 my %cid_inv = ();
@@ -80,11 +80,13 @@ init_default_player    ();
 init_default_character ();
 update_players_cache   ();
 
-open (LOG, ">>dump.log") or die $!;
+#open (LOG, ">>dump.log") or die $!;  //deprecated
+open my $LOG, '>>', "dump.log" or die $!;
+
 while (<STDIN>) {
     next if ($_ =~ m/Duplicate magazine/ || $_ =~ m/arrived from nonowner/);
     print STDERR $_;
-    print LOG $_;
+    print $LOG $_;
 
     if ($_ =~ m/CHILD:/) {
         chop;
@@ -99,7 +101,7 @@ while (<STDIN>) {
         init_login_uid ($_);
     }
 }
-close(LOG);
+close($LOG);
 
 $dbh->disconnect;
 exit;
@@ -1163,6 +1165,11 @@ sub h_call_admin {
     my $p = shift;
     return unless ($p && ref($p) eq 'ARRAY');
     my ($cmd,$message) = @$p;
+    unless ($message) {
+    	print STDERR "AdminTools_SLACK:ERROR no message defined!\n";
+    	return;
+    }
+    $message =~s/[\$#@~!&()\[\];.,:?^`\\\/\"\'\<\>]+//g;
     my ($url, $emoji, $channel, $username) = ($SLACK_URL, $SLACK_EMOJI, $SLACK_CHANNEL, $SLACK_USERNAME);
     my $postDATA = "{ \"channel\": \"$channel\", \"username\": \"$username\", \"text\": \"$message\", \"icon_emoji\": \"$emoji\" }";
     my $userAgent = LWP::UserAgent->new();
@@ -1175,10 +1182,11 @@ sub h_call_admin {
     
     if ($res->is_success) {
         print STDERR "AdminTools_SLACK:WebHook PUSH sucessful: ", $res->decoded_content, " \n";
-        print LOG "AdminTools_SLACK:WebHook PUSH sucessful: ", $res->decoded_content, " \n";
+        print $LOG "AdminTools_SLACK:WebHook PUSH sucessful: ", $res->decoded_content, " \n";
+        print $LOG "AdminTools_SLACK:PUSH Message: ", $message, "\n";
     } else {
 	print STDERR "AdminTools_SLACK:WebHook PUSH failed with error code: ", $res->code, "message: ", $res->message, " \n";
-        print LOG "AdminTools_SLACK:WebHook PUSH failed with error code: ", $res->code, "message: ", $res->message, " \n";
+        print $LOG "AdminTools_SLACK:WebHook PUSH failed with error code: ", $res->code, "message: ", $res->message, " \n";
     }
 }
 
@@ -1192,5 +1200,5 @@ sub h_log_admin {
         return;
     }
     print STDERR "AdminTools_usageLogger: $message\n";
-    print LOG "AdminTools_usageLogger: $message\n";
+    print $LOG "AdminTools_usageLogger: $message\n";
 }
