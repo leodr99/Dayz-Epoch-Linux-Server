@@ -1169,7 +1169,7 @@ sub h_call_admin {
     	print STDERR "AdminTools_SLACK:ERROR no message defined!\n";
     	return;
     }
-    $message =~s/[\$#@~!&()\[\];.,:?^`\\\/\"\'\<\>]+//g;
+    $message =~s/[\$#@~!&()\[\];.,?^`\\\/\"\'\<\>]+//g;
     my ($url, $emoji, $channel, $username) = ($SLACK_URL, $SLACK_EMOJI, $SLACK_CHANNEL, $SLACK_USERNAME);
     my $postDATA = "{ \"channel\": \"$channel\", \"username\": \"$username\", \"text\": \"$message\", \"icon_emoji\": \"$emoji\" }";
     my $userAgent = LWP::UserAgent->new();
@@ -1199,6 +1199,12 @@ sub h_log_admin {
         print STDERR "AdminTools_usageLogger: ERROR no message defined!\n";
         return;
     }
+    $message =~s/[\$#@~!&()\[\];.,?^`\\\/\"\'\<\>]+//g;
+
+    open my $admlog, '>>', 'AdminLog.txt' or die $!;
+
     print STDERR "AdminTools_usageLogger: $message\n";
-    print $LOG "AdminTools_usageLogger: $message\n";
+    print $admlog "AdminTools_usageLogger: $message\n";
+
+    close($admlog);
 }
