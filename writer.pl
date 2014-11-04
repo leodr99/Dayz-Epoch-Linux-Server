@@ -1195,7 +1195,7 @@ sub h_log_admin {
     my $p = shift;
     return unless ($p && ref($p) eq 'ARRAY');
     my ($cmd, $message) = @$p;
-    unless $message {
+    unless ($message) {
         print STDERR "AdminTools_usageLogger: ERROR no message defined!\n";
         return;
     }
